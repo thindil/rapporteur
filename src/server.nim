@@ -25,8 +25,11 @@
 
 import std/[strtabs, cgi]
 
-# Fill the values when debugging:
-setTestData("name", "wertr45", "hash", "somehash", "content", "can't show error")
-var request = readData()
-validateData(request, "key", "hash", "content")
+when defined(debug):
+  setTestData("key", "wertr45", "hash", "somehash", "content", "can't show error")
+let request = readData()
+for key in ["key", "hash", "content"]:
+  if key notin request:
+    stdout.write("Status: 400 No " & key & " sent.\n")
+    quit QuitFailure
 stdout.write("Status: 200 OK\n")
