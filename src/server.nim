@@ -23,7 +23,7 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import std/[cgi, parseopt, strtabs]
+import std/[cgi, parsecfg, parseopt, strtabs, streams]
 
 # Test data
 when defined(debug):
@@ -43,6 +43,28 @@ while true:
       configFile = args.val
   else:
     discard
+
+# Read the server's configuration
+var fileStream = configFile.newFileStream(fmRead)
+if fileStream == nil:
+  stdout.write("Status: 500 Server not configured.\n")
+  quit QuitFailure
+var config: CfgParser
+config.open(fileStream, configFile)
+while true:
+  var entry = config.next
+  case entry.kind
+  of cfgEof: break
+  of cfgSectionStart:   ## a `[section]` has been parsed
+    echo "new section: " & entry.section
+  of cfgKeyValuePair:
+    echo "key-value-pair: " & entry.key & ": " & entry.value
+  of cfgOption:
+    echo "command: " & entry.key & ": " & entry.value
+  of cfgError:
+    stdout.write("Status: 500 " & entry.msg & " sent.\n")
+    quit QuitFailure
+config.close
 
 let request = readData()
 for key in ["key", "hash", "content"]:
