@@ -23,10 +23,27 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import std/[strtabs, cgi]
+import std/[cgi, parseopt, strtabs]
 
+# Test data
 when defined(debug):
   setTestData("key", "wertr45", "hash", "somehash", "content", "can't show error")
+
+# Read the command line parameters
+var
+  args = initOptParser()
+  configFile = ""
+while true:
+  args.next
+  case args.kind
+  of cmdEnd:
+    break
+  of cmdShortOption, cmdLongOption:
+    if args.key == "config":
+      configFile = args.val
+  else:
+    discard
+
 let request = readData()
 for key in ["key", "hash", "content"]:
   if key notin request:
