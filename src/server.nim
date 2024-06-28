@@ -23,7 +23,7 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import std/[cgi, envvars, parsecfg, paths, strtabs, strutils, streams]
+import std/[cgi, envvars, files, hashes, os, parsecfg, paths, strtabs, strutils, streams]
 
 # Test data
 when defined(debug):
@@ -34,7 +34,7 @@ let configFile = getEnv("RAPPORT_CONFIG")
 # Read the server's configuration
 var fileStream = configFile.newFileStream(fmRead)
 if fileStream == nil:
-  stdout.write("Status: 500 No server configuration.\n")
+  stdout.write("Status: 500 No server configuration\n")
   quit QuitFailure
 var config: CfgParser
 config.open(fileStream, configFile)
@@ -53,18 +53,26 @@ while true:
     of "datadir":
       dataDir = entry.value.Path
   of cfgError:
-    stdout.write("Status: 500 " & entry.msg & ".\n")
+    stdout.write("Status: 500 " & entry.msg & "\n")
     quit QuitFailure
   else:
     discard
 config.close
 if keys.len == 0 or dataDir.string.len == 0:
-  stdout.write("Status: 500 Server not configured.\n")
+  stdout.write("Status: 500 Server not configured\n")
   quit QuitFailure
 
+# Read the request data
 let request = readData()
 for key in ["key", "hash", "content"]:
   if key notin request:
     stdout.write("Status: 400 No " & key & " sent.\n")
     quit QuitFailure
-stdout.write("Status: 200 OK\n")
+
+# Check if the same report exist
+let newHash = hash(x = request["key"] & request["hash"])
+if fileExists((dataDir.string & DirSep & $newHash).Path):
+  stdout.write("Status: 208 Report exists\n")
+  quit QuitSuccess
+
+stdout.write("Status: 201 Created\n")
