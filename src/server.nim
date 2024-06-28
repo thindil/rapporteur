@@ -29,9 +29,8 @@ import std/[cgi, envvars, files, hashes, os, parsecfg, paths, strtabs, strutils,
 when defined(debug):
   setTestData("key", "wertr45", "hash", "somehash", "content", "can't show error")
 
-let configFile = getEnv("RAPPORT_CONFIG")
-
 # Read the server's configuration
+let configFile = getEnv("RAPPORT_CONFIG")
 var fileStream = configFile.newFileStream(fmRead)
 if fileStream == nil:
   stdout.write("Status: 500 No server configuration\n")
@@ -70,9 +69,17 @@ for key in ["key", "hash", "content"]:
     quit QuitFailure
 
 # Check if the same report exist
-let newHash = hash(x = request["key"] & request["hash"])
-if fileExists((dataDir.string & DirSep & $newHash).Path):
+let
+  newHash = hash(x = request["key"] & request["hash"])
+  reportFile = dataDir.string & DirSep & $newHash & ".txt"
+if fileExists(reportFile.Path):
   stdout.write("Status: 208 Report exists\n")
   quit QuitSuccess
+
+# Create a new report file and save it in the data directory
+let report = reportFile.open(mode = fmWrite)
+report.writeLine("KEY: " & request["key"])
+report.writeLine(request["content"])
+report.close
 
 stdout.write("Status: 201 Created\n")
