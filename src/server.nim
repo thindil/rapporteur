@@ -25,12 +25,13 @@
 
 import std/[cgi, envvars, files, hashes, os, parsecfg, paths, strtabs, strutils, streams]
 
-proc main() =
-# Test data
+proc main() {.tags: [ReadEnvEffect, WriteIOEffect, ReadDirEffect, ReadIOEffect,
+    RootEffect].} =
+  # Test data
   when defined(debug):
     setTestData("key", "wertr45", "hash", "somehash", "content", "can't show error")
 
-# Read the server's configuration
+  # Read the server's configuration
   let configFile = getEnv("RAPPORT_CONFIG")
   var fileStream = configFile.newFileStream(fmRead)
   if fileStream == nil:
@@ -42,7 +43,11 @@ proc main() =
     keys: seq[string]
     dataDir: Path
   while true:
-    var entry = config.next
+    var entry = try:
+        config.next
+      except ValueError, OSError, IOError:
+        stdout.write("Status: 500 Invalid config value\n")
+        quit QuitFailure
     case entry.kind
     of cfgEof:
       break
@@ -62,14 +67,14 @@ proc main() =
     stdout.write("Status: 500 Server not configured\n")
     quit QuitFailure
 
-# Read the request data
+  # Read the request data
   let request = readData()
   for key in ["key", "hash", "content"]:
     if key notin request:
       stdout.write("Status: 400 No " & key & " sent.\n")
       quit QuitFailure
 
-# Check if the same report exist
+  # Check if the same report exist
   let
     newHash = hash(x = request["key"] & request["hash"])
     reportFile = dataDir.string & DirSep & $newHash & ".txt"
@@ -77,7 +82,7 @@ proc main() =
     stdout.write("Status: 208 Report exists\n")
     quit QuitSuccess
 
-# Create a new report file and save it in the data directory
+  # Create a new report file and save it in the data directory
   let report = reportFile.open(mode = fmWrite)
   report.writeLine("KEY: " & request["key"])
   report.writeLine(request["content"])
