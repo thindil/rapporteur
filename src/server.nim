@@ -23,26 +23,13 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import std/[cgi, parsecfg, parseopt, strtabs, streams]
+import std/[cgi, envvars, parsecfg, strtabs, streams]
 
 # Test data
 when defined(debug):
   setTestData("key", "wertr45", "hash", "somehash", "content", "can't show error")
 
-# Read the command line parameters
-var
-  args = initOptParser()
-  configFile = ""
-while true:
-  args.next
-  case args.kind
-  of cmdEnd:
-    break
-  of cmdShortOption, cmdLongOption:
-    if args.key == "config":
-      configFile = args.val
-  else:
-    discard
+let configFile = getEnv("RAPPORT_CONFIG")
 
 # Read the server's configuration
 var fileStream = configFile.newFileStream(fmRead)
@@ -54,16 +41,15 @@ config.open(fileStream, configFile)
 while true:
   var entry = config.next
   case entry.kind
-  of cfgEof: break
-  of cfgSectionStart:   ## a `[section]` has been parsed
-    echo "new section: " & entry.section
-  of cfgKeyValuePair:
+  of cfgEof:
+    break
+  of cfgKeyValuePair, cfgOption:
     echo "key-value-pair: " & entry.key & ": " & entry.value
-  of cfgOption:
-    echo "command: " & entry.key & ": " & entry.value
   of cfgError:
-    stdout.write("Status: 500 " & entry.msg & " sent.\n")
+    stdout.write("Status: 500 " & entry.msg & ".\n")
     quit QuitFailure
+  else:
+    discard
 config.close
 
 let request = readData()
