@@ -25,61 +25,65 @@
 
 import std/[cgi, envvars, files, hashes, os, parsecfg, paths, strtabs, strutils, streams]
 
+proc main() =
 # Test data
-when defined(debug):
-  setTestData("key", "wertr45", "hash", "somehash", "content", "can't show error")
+  when defined(debug):
+    setTestData("key", "wertr45", "hash", "somehash", "content", "can't show error")
 
 # Read the server's configuration
-let configFile = getEnv("RAPPORT_CONFIG")
-var fileStream = configFile.newFileStream(fmRead)
-if fileStream == nil:
-  stdout.write("Status: 500 No server configuration\n")
-  quit QuitFailure
-var config: CfgParser
-config.open(fileStream, configFile)
-var
-  keys: seq[string]
-  dataDir: Path
-while true:
-  var entry = config.next
-  case entry.kind
-  of cfgEof:
-    break
-  of cfgKeyValuePair, cfgOption:
-    case entry.key
-    of "keys":
-      keys = entry.value.split(sep = ';')
-    of "datadir":
-      dataDir = entry.value.Path
-  of cfgError:
-    stdout.write("Status: 500 " & entry.msg & "\n")
+  let configFile = getEnv("RAPPORT_CONFIG")
+  var fileStream = configFile.newFileStream(fmRead)
+  if fileStream == nil:
+    stdout.write("Status: 500 No server configuration\n")
     quit QuitFailure
-  else:
-    discard
-config.close
-if keys.len == 0 or dataDir.string.len == 0:
-  stdout.write("Status: 500 Server not configured\n")
-  quit QuitFailure
+  var config: CfgParser
+  config.open(fileStream, configFile)
+  var
+    keys: seq[string]
+    dataDir: Path
+  while true:
+    var entry = config.next
+    case entry.kind
+    of cfgEof:
+      break
+    of cfgKeyValuePair, cfgOption:
+      case entry.key
+      of "keys":
+        keys = entry.value.split(sep = ';')
+      of "datadir":
+        dataDir = entry.value.Path
+    of cfgError:
+      stdout.write("Status: 500 " & entry.msg & "\n")
+      quit QuitFailure
+    else:
+      discard
+  config.close
+  if keys.len == 0 or dataDir.string.len == 0:
+    stdout.write("Status: 500 Server not configured\n")
+    quit QuitFailure
 
 # Read the request data
-let request = readData()
-for key in ["key", "hash", "content"]:
-  if key notin request:
-    stdout.write("Status: 400 No " & key & " sent.\n")
-    quit QuitFailure
+  let request = readData()
+  for key in ["key", "hash", "content"]:
+    if key notin request:
+      stdout.write("Status: 400 No " & key & " sent.\n")
+      quit QuitFailure
 
 # Check if the same report exist
-let
-  newHash = hash(x = request["key"] & request["hash"])
-  reportFile = dataDir.string & DirSep & $newHash & ".txt"
-if fileExists(reportFile.Path):
-  stdout.write("Status: 208 Report exists\n")
-  quit QuitSuccess
+  let
+    newHash = hash(x = request["key"] & request["hash"])
+    reportFile = dataDir.string & DirSep & $newHash & ".txt"
+  if fileExists(reportFile.Path):
+    stdout.write("Status: 208 Report exists\n")
+    quit QuitSuccess
 
 # Create a new report file and save it in the data directory
-let report = reportFile.open(mode = fmWrite)
-report.writeLine("KEY: " & request["key"])
-report.writeLine(request["content"])
-report.close
+  let report = reportFile.open(mode = fmWrite)
+  report.writeLine("KEY: " & request["key"])
+  report.writeLine(request["content"])
+  report.close
 
-stdout.write("Status: 201 Created\n")
+  stdout.write("Status: 201 Created\n")
+
+when isMainModule:
+  main()
