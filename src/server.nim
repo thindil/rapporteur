@@ -23,7 +23,7 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import std/[cgi, envvars, parsecfg, strtabs, streams]
+import std/[cgi, envvars, parsecfg, paths, strtabs, strutils, streams]
 
 # Test data
 when defined(debug):
@@ -34,23 +34,33 @@ let configFile = getEnv("RAPPORT_CONFIG")
 # Read the server's configuration
 var fileStream = configFile.newFileStream(fmRead)
 if fileStream == nil:
-  stdout.write("Status: 500 Server not configured.\n")
+  stdout.write("Status: 500 No server configuration.\n")
   quit QuitFailure
 var config: CfgParser
 config.open(fileStream, configFile)
+var
+  keys: seq[string]
+  dataDir: Path
 while true:
   var entry = config.next
   case entry.kind
   of cfgEof:
     break
   of cfgKeyValuePair, cfgOption:
-    echo "key-value-pair: " & entry.key & ": " & entry.value
+    case entry.key
+    of "keys":
+      keys = entry.value.split(sep = ';')
+    of "datadir":
+      dataDir = entry.value.Path
   of cfgError:
     stdout.write("Status: 500 " & entry.msg & ".\n")
     quit QuitFailure
   else:
     discard
 config.close
+if keys.len == 0 or dataDir.string.len == 0:
+  stdout.write("Status: 500 Server not configured.\n")
+  quit QuitFailure
 
 let request = readData()
 for key in ["key", "hash", "content"]:
