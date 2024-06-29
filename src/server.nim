@@ -24,35 +24,42 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import std/[cgi, envvars, files, hashes, os, parsecfg, paths, strtabs, strutils, streams]
+import contracts
 
 proc main() {.raises: [], tags: [ReadEnvEffect, WriteIOEffect, ReadDirEffect, ReadIOEffect,
-    RootEffect].} =
+    RootEffect], contractual.} =
 
-  proc answer(message: string) {.raises: [], tags: [WriteIOEffect].} =
-    try:
-      stdout.write(message & "\n")
-    except IOError:
-      discard
+
+  type AnswerString = string
+
+  proc answer(message: AnswerString) {.raises: [], tags: [WriteIOEffect], contractual.} =
+    require:
+      message.len > 0
+    body:
+      try:
+        stdout.write(s = message & "\n")
+      except IOError:
+        discard
 
   # Test data
   when defined(debug):
     try:
-      setTestData("key", "wertr45", "hash", "somehash", "content", "can't show error")
+      setTestData(keysvalues = ["key", "wertr45", "hash", "somehash", "content", "can't show error"])
     except OSError:
-      answer("Status: 500 Invalid test data")
+      answer(message = "Status: 500 Invalid test data")
       quit QuitFailure
 
   # Read the server's configuration
-  let configFile = getEnv("RAPPORT_CONFIG")
-  var fileStream = configFile.newFileStream(fmRead)
+  let configFile = getEnv(key = "RAPPORT_CONFIG")
+  var fileStream = configFile.newFileStream(mode = fmRead)
   if fileStream == nil:
-    answer("Status: 500 No server configuration")
+    answer(message = "Status: 500 No server configuration")
     quit QuitFailure
   var config: CfgParser
   try:
-    config.open(fileStream, configFile)
+    config.open(input = fileStream, filename = configFile)
   except IOError, Exception:
-    answer("Status: 500 Invalid config file")
+    answer(message = "Status: 500 Invalid config file")
     quit QuitFailure
   var
     keys: seq[string]
@@ -61,7 +68,7 @@ proc main() {.raises: [], tags: [ReadEnvEffect, WriteIOEffect, ReadDirEffect, Re
     var entry = try:
         config.next
       except ValueError, OSError, IOError:
-        answer("Status: 500 Invalid config value")
+        answer(message = "Status: 500 Invalid config value")
         quit QuitFailure
     case entry.kind
     of cfgEof:
@@ -73,27 +80,27 @@ proc main() {.raises: [], tags: [ReadEnvEffect, WriteIOEffect, ReadDirEffect, Re
       of "datadir":
         dataDir = entry.value.Path
     of cfgError:
-      answer("Status: 500 " & entry.msg)
+      answer(message = "Status: 500 " & entry.msg)
       quit QuitFailure
     else:
       discard
   try:
     config.close
   except OSError, IOError:
-    answer("Status: 500 Invalid config file")
+    answer(message = "Status: 500 Invalid config file")
   if keys.len == 0 or dataDir.string.len == 0:
-    answer("Status: 500 Server not configured")
+    answer(message = "Status: 500 Server not configured")
     quit QuitFailure
 
   # Read the request data
   let request = try:
       readData()
     except ValueError, IOError:
-      answer("Status: 400 Invalid data sent")
+      answer(message = "Status: 400 Invalid data sent")
       quit QuitFailure
   for key in ["key", "hash", "content"]:
     if key notin request:
-      answer("Status: 400 No " & key & " sent.")
+      answer(message = "Status: 400 No " & key & " sent.")
       quit QuitFailure
 
   # Check if the same report exist
@@ -101,29 +108,29 @@ proc main() {.raises: [], tags: [ReadEnvEffect, WriteIOEffect, ReadDirEffect, Re
     newHash = try:
         hash(x = request["key"] & request["hash"])
       except KeyError:
-        answer("Status: 500 Invalid key")
+        answer(message = "Status: 500 Invalid key")
         quit QuitFailure
     reportFile = dataDir.string & DirSep & $newHash & ".txt"
-  if fileExists(reportFile.Path):
-    answer("Status: 208 Report exists")
+  if fileExists(filename = reportFile.Path):
+    answer(message = "Status: 208 Report exists")
     quit QuitSuccess
 
   # Create a new report file and save it in the data directory
   let report = try:
       reportFile.open(mode = fmWrite)
     except IOError:
-      answer("Status: 500 Can't create report")
+      answer(message = "Status: 500 Can't create report")
       quit QuitFailure
   try:
-    report.writeLine("KEY: " & request["key"])
-    report.writeLine(request["content"])
+    report.writeLine(x = "KEY: " & request["key"])
+    report.writeLine(x = request["content"])
   except KeyError, IOError:
-    answer("Status: 500 Invalid key")
+    answer(message = "Status: 500 Invalid key")
     quit QuitFailure
   finally:
     report.close
 
-  answer("Status: 201 Created")
+  answer(message = "Status: 201 Created")
 
 when isMainModule:
   main()
