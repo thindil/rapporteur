@@ -102,6 +102,13 @@ proc main() {.raises: [], tags: [ReadEnvEffect, WriteIOEffect, ReadDirEffect, Re
     if key notin request:
       answer(message = "Status: 400 No " & key & " sent.")
       quit QuitFailure
+  try:
+    if request["key"] notin keys:
+      answer(message = "Status: 401 Unauthorized")
+      quit QuitFailure
+  except KeyError:
+    answer(message = "Status: 500 Can't check the key")
+    quit QuitFailure
 
   # Check if the same report exist
   let
