@@ -23,16 +23,23 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+## Provides simpel CGI program to receive errors' reports from clients,
+## authenticate them and write in the selected directory. For more information
+## about setting the server, please loot at the project's documentation.
+
 import std/[cgi, envvars, files, hashes, os, parsecfg, paths, strtabs, strutils, streams]
 import contracts
 
 proc main() {.raises: [], tags: [ReadEnvEffect, WriteIOEffect, ReadDirEffect, ReadIOEffect,
     RootEffect], contractual.} =
-
+  ## The main procedure of the server
 
   type AnswerString = string
 
   proc answer(message: AnswerString) {.raises: [], tags: [WriteIOEffect], contractual.} =
+    ## Print the message into standard output to send it to the client
+    ##
+    ## * message - the message to print
     require:
       message.len > 0
     body:
