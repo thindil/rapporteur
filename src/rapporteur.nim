@@ -35,20 +35,26 @@ var
   serverAddress: Uri = parseUri(uri = "")
   appKey: RapportKey = ""
 
-proc initRapport*(httpAddress: Uri; key: RapportKey) {.raises: [RapportError], tags: [], contractual.} =
+proc initRapport*(httpAddress: Uri; key: RapportKey) {.raises: [RapportError],
+    tags: [], contractual.} =
   ensure:
     serverAddress == httpAddress
     appKey == key
   body:
     if ($httpAddress).len == 0:
-      raise newException(RapportError, "HTTP address can't be empty")
+      raise newException(exceptn = RapportError,
+          message = "HTTP address can't be empty")
     if key.len == 0:
-      raise newException(RapportError, "Application key can't be empty")
+      raise newException(exceptn = RapportError,
+          message = "Application key can't be empty")
     serverAddress = httpAddress
     appKey = key
 
-proc sendRapport*(content: RapportContent) {.raises: [RapportError], tags: [], contractual.} =
+proc sendRapport*(content: RapportContent) {.raises: [RapportError], tags: [],
+    contractual.} =
   if ($serverAddress).len == 0 or appKey.len == 0:
-    raise newException(RapportError, "rapporteur not initialized")
+    raise newException(exceptn = RapportError,
+        message = "rapporteur not initialized")
   if content.len == 0:
-    raise newException(RapportError, "content can't be empty")
+    raise newException(exceptn = RapportError,
+        message = "content can't be empty")
