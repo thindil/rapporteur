@@ -57,22 +57,22 @@ proc main() {.raises: [], tags: [ReadEnvEffect, WriteIOEffect, ReadDirEffect, Re
       quit QuitFailure
 
   # Read the server's configuration
-  let configFile = getEnv(key = "RAPPORT_CONFIG")
-  var fileStream = configFile.newFileStream(mode = fmRead)
+  let configFile: Path = getEnv(key = "RAPPORT_CONFIG").Path
+  var fileStream: FileStream = configFile.string.newFileStream(mode = fmRead)
   if fileStream == nil:
     answer(message = "Status: 500 No server configuration")
     quit QuitFailure
-  var config: CfgParser
+  var config: CfgParser = CfgParser()
   try:
-    config.open(input = fileStream, filename = configFile)
+    config.open(input = fileStream, filename = configFile.string)
   except IOError, Exception:
     answer(message = "Status: 500 Invalid config file")
     quit QuitFailure
   var
-    keys: seq[string]
-    dataDir: Path
+    keys: seq[string] = @[]
+    dataDir: Path = "".Path
   while true:
-    var entry = try:
+    var entry: CfgEvent = try:
         config.next
       except ValueError, OSError, IOError:
         answer(message = "Status: 500 Invalid config value")
@@ -100,7 +100,7 @@ proc main() {.raises: [], tags: [ReadEnvEffect, WriteIOEffect, ReadDirEffect, Re
     quit QuitFailure
 
   # Read the request data
-  let request = try:
+  let request: StringTableRef = try:
       readData()
     except ValueError, IOError:
       answer(message = "Status: 400 Invalid data sent")
@@ -119,19 +119,19 @@ proc main() {.raises: [], tags: [ReadEnvEffect, WriteIOEffect, ReadDirEffect, Re
 
   # Check if the same report exist
   let
-    newHash = try:
+    newHash: Hash = try:
         hash(x = request["key"] & request["hash"])
       except KeyError:
         answer(message = "Status: 500 Invalid key")
         quit QuitFailure
-    reportFile = dataDir.string & DirSep & $newHash & ".txt"
-  if fileExists(filename = reportFile.Path):
+    reportFile: Path = (dataDir.string & DirSep & $newHash & ".txt").Path
+  if fileExists(filename = reportFile):
     answer(message = "Status: 208 Report exists")
     quit QuitSuccess
 
   # Create a new report file and save it in the data directory
-  let report = try:
-      reportFile.open(mode = fmWrite)
+  let report: File = try:
+      reportFile.string.open(mode = fmWrite)
     except IOError:
       answer(message = "Status: 500 Can't create report")
       quit QuitFailure
