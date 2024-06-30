@@ -23,20 +23,32 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import std/uri
+import contracts
+
+type
+  RapportError* = object of CatchableError
+  RapportKey* = string
+  RapportContent* = string
+
 var
-  serverAddress: string = ""
-  appKey: string = ""
+  serverAddress: Uri = parseUri(uri = "")
+  appKey: RapportKey = ""
 
-type RapportError* = object of CatchableError
+proc initRapport*(httpAddress: Uri; key: RapportKey) {.raises: [RapportError], tags: [], contractual.} =
+  ensure:
+    serverAddress == httpAddress
+    appKey == key
+  body:
+    if ($httpAddress).len == 0:
+      raise newException(RapportError, "HTTP address can't be empty")
+    if key.len == 0:
+      raise newException(RapportError, "Application key can't be empty")
+    serverAddress = httpAddress
+    appKey = key
 
-proc initRapport*(httpAddress, key: string) =
-  if httpAddress.len == 0:
-    raise newException(RapportError, "HTTP address can't be empty")
-  if key.len == 0:
-    raise newException(RapportError, "Application key can't be empty")
-  serverAddress = httpAddress
-  appKey = key
-
-proc sendRapport*(content: string) =
-  if serverAddress.len == 0 or appKey.len == 0:
+proc sendRapport*(content: RapportContent) {.raises: [RapportError], tags: [], contractual.} =
+  if ($serverAddress).len == 0 or appKey.len == 0:
     raise newException(RapportError, "rapporteur not initialized")
+  if content.len == 0:
+    raise newException(RapportError, "content can't be empty")
