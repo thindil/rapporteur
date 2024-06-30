@@ -48,14 +48,6 @@ proc main() {.raises: [], tags: [ReadEnvEffect, WriteIOEffect, ReadDirEffect, Re
       except IOError:
         discard
 
-  # Test data
-  when defined(debug):
-    try:
-      setTestData(keysvalues = ["key", "wertr45", "hash", "somehash", "content", "can't show error"])
-    except OSError:
-      answer(message = "Status: 500 Invalid test data")
-      quit QuitFailure
-
   # Read the server's configuration
   let configFile: Path = getEnv(key = "RAPPORT_CONFIG").Path
   var fileStream: FileStream = configFile.string.newFileStream(mode = fmRead)
