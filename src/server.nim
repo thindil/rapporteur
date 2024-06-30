@@ -93,9 +93,12 @@ proc main() {.raises: [], tags: [ReadEnvEffect, WriteIOEffect, ReadDirEffect, Re
 
   # Read the request data
   let request: StringTableRef = try:
-      readData()
+      readData(allowedMethods = {methodPost})
     except ValueError, IOError:
       answer(message = "Status: 400 Invalid data sent")
+      quit QuitFailure
+    except CgiError:
+      answer(message = "Status: 401 Invalid method sent")
       quit QuitFailure
   for key in ["key", "hash", "content"]:
     if key notin request:
