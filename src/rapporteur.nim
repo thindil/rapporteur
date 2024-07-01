@@ -35,7 +35,7 @@
 ##
 ##     sendRapport(content = "My message here")
 
-import std/uri
+import std/[hashes, httpclient, uri]
 import contracts
 
 type
@@ -73,19 +73,36 @@ proc initRapport*(httpAddress: Uri; key: RapportKey) {.raises: [RapportError],
     serverAddress = httpAddress
     appKey = key
 
-proc sendRapport*(content: RapportContent) {.raises: [RapportError], tags: [],
-    contractual.} =
+proc sendRapport*(content: RapportContent): string {.raises: [RapportError],
+    tags: [ReadIOEffect, WriteIOEffect, TimeEffect], contractual.} =
   ## Send a report to the project's server.
   ##
   ## * content - the content of the report
+  ##
+  ## Returns the response from the server
   # Check do rapporteur was initialized
   if ($serverAddress).len == 0 or appKey.len == 0:
     raise newException(exceptn = RapportError,
-        message = "rapporteur not initialized")
+        message = "Rapporteur not initialized")
   # Check do content of the report was supplied
   if content.len == 0:
     raise newException(exceptn = RapportError,
-        message = "content can't be empty")
+        message = "Content can't be empty")
   # If key is set to DEADBEEF, don't send anything
   if appKey == "DEADBEEF":
     return
+  let client = newHttpClient()
+  client.headers = try:
+      newHttpHeaders({"Content-Type": "application/x-www-form-urlencoded"})
+    except KeyError:
+      raise newException(exceptn = RapportError,
+          message = "Can't set the request HTTP header")
+  let newHash: Hash = hash(x = content)
+  try:
+    result = client.request(serverAddress, httpMethod = HttpPost,
+        body = "key=" & appKey & "&hash=" & $newHash & "&content=" &
+        content).status
+  except:
+    raise newException(exceptn = RapportError,
+        message = "Can't set the HTTP request")
+
