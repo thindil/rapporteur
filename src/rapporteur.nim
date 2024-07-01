@@ -23,13 +23,29 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+## Provides API to send reports from an application to the project's server.
+## Usually, before sending a report, the library requires initialization with
+## procedure `initRapport`:
+##
+##     initRapport(httpAddress = 'https://mysite.com', key = "myAppKey")
+##
+## Setting key to **DEADBEEF** value will disable sending reports.
+##
+## To send a report to a server, use procedure `sendRapport`:
+##
+##     sendRapport(content = "My message here")
+
 import std/uri
 import contracts
 
 type
   RapportError* = object of CatchableError
+    ## Raised when there is a problem with the project, like not initialized,
+    ## etc.
   RapportKey* = string
+    ## Used to store the application key
   RapportContent* = string
+    ## Used to store a report's content
 
 var
   serverAddress: Uri = parseUri(uri = "")
@@ -37,6 +53,13 @@ var
 
 proc initRapport*(httpAddress: Uri; key: RapportKey) {.raises: [RapportError],
     tags: [], contractual.} =
+  ## Initialize the library. Sets its configuration.
+  ##
+  ## * httpAddress - the HTTP address to which a server to which a report will
+  ##                 be send. Must be a valid address.
+  ## * key         - the application key used in the server authentication. Must
+  ##                 be the same as on the server. Setting it to `DEADBEEF` will
+  ##                 disable sending reports.
   ensure:
     serverAddress == httpAddress
     appKey == key
@@ -52,6 +75,9 @@ proc initRapport*(httpAddress: Uri; key: RapportKey) {.raises: [RapportError],
 
 proc sendRapport*(content: RapportContent) {.raises: [RapportError], tags: [],
     contractual.} =
+  ## Send a report to the project's server.
+  ##
+  ## * content - the content of the report
   # Check do rapporteur was initialized
   if ($serverAddress).len == 0 or appKey.len == 0:
     raise newException(exceptn = RapportError,
