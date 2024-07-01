@@ -52,9 +52,14 @@ proc initRapport*(httpAddress: Uri; key: RapportKey) {.raises: [RapportError],
 
 proc sendRapport*(content: RapportContent) {.raises: [RapportError], tags: [],
     contractual.} =
+  # Check do rapporteur was initialized
   if ($serverAddress).len == 0 or appKey.len == 0:
     raise newException(exceptn = RapportError,
         message = "rapporteur not initialized")
+  # Check do content of the report was supplied
   if content.len == 0:
     raise newException(exceptn = RapportError,
         message = "content can't be empty")
+  # If key is set to DEADBEEF, don't send anything
+  if appKey == "DEADBEEF":
+    return
