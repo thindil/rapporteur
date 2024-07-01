@@ -79,7 +79,7 @@ jobs:
           pkg install -y git nimble ca_root_nss
         run: |
           export PATH=$PATH:$HOME/.nimble/bin:/usr/local/nim/bin
-          git config --global --add safe.directory /home/runner/work/nish/nish
+          git config --global --add safe.directory /home/runner/work/rapporteur/rapporteur
           nimble -y release
 
   build_windows:
