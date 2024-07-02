@@ -91,7 +91,11 @@ proc sendRapport*(content: RapportContent): string {.raises: [RapportError],
   # If key is set to DEADBEEF, don't send anything
   if appKey == "DEADBEEF":
     return
-  let client: HttpClient = newHttpClient()
+  let client: HttpClient = try:
+      newHttpClient()
+    except SslError, LibraryError, Exception:
+      raise newException(exceptn = RapportError,
+          message = getCurrentExceptionMsg())
   client.headers = try:
       newHttpHeaders(keyValuePairs = {"Content-Type": "application/x-www-form-urlencoded"})
     except KeyError:
