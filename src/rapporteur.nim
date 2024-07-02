@@ -35,7 +35,7 @@
 ##
 ##     sendRapport(content = "My message here")
 
-import std/[hashes, httpclient, uri]
+import std/[cgi, hashes, httpclient, net, uri]
 import contracts
 
 type
@@ -91,18 +91,18 @@ proc sendRapport*(content: RapportContent): string {.raises: [RapportError],
   # If key is set to DEADBEEF, don't send anything
   if appKey == "DEADBEEF":
     return
-  let client = newHttpClient()
+  let client: HttpClient = newHttpClient()
   client.headers = try:
-      newHttpHeaders({"Content-Type": "application/x-www-form-urlencoded"})
+      newHttpHeaders(keyValuePairs = {"Content-Type": "application/x-www-form-urlencoded"})
     except KeyError:
       raise newException(exceptn = RapportError,
           message = "Can't set the request HTTP header")
-  let newHash: Hash = hash(x = content)
+  let newHash: Hash = hash(x = content.xmlEncode)
   try:
-    result = client.request(serverAddress, httpMethod = HttpPost,
-        body = "key=" & appKey & "&hash=" & $newHash & "&content=" &
-        content).status
-  except:
+    result = client.request(url = serverAddress, httpMethod = HttpPost,
+        body = "key=" & appKey.xmlEncode & "&hash=" & $newHash & "&content=" &
+        content.xmlEncode).status
+  except ValueError, ProtocolError, TimeoutError, IOError, OSError:
     raise newException(exceptn = RapportError,
-        message = "Can't set the HTTP request")
+        message = getCurrentExceptionMsg())
 
