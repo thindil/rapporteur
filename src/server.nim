@@ -23,7 +23,7 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-## Provides simpel CGI program to receive errors' reports from clients,
+## Provides simple CGI program to receive errors' reports from clients,
 ## authenticate them and write in the selected directory. For more information
 ## about setting the server, please loot at the project's documentation.
 
