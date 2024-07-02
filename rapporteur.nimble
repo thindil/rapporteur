@@ -15,7 +15,6 @@ installFiles = @["rapporteur.nim"]
 
 requires "nim >= 2.0.0"
 requires "contracts >= 0.2.2"
-requires "unittest2"
 
 # Tasks
 
