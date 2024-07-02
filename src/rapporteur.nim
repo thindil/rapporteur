@@ -74,7 +74,7 @@ proc initRapport*(httpAddress: Uri; key: RapportKey) {.raises: [RapportError],
     appKey = key
 
 proc sendRapport*(content: RapportContent): string {.raises: [RapportError],
-    tags: [ReadIOEffect, WriteIOEffect, TimeEffect], contractual.} =
+    tags: [ReadIOEffect, WriteIOEffect, TimeEffect, RootEffect], contractual.} =
   ## Send a report to the project's server.
   ##
   ## * content - the content of the report
@@ -102,7 +102,7 @@ proc sendRapport*(content: RapportContent): string {.raises: [RapportError],
     result = client.request(url = serverAddress, httpMethod = HttpPost,
         body = "key=" & appKey.xmlEncode & "&hash=" & $newHash & "&content=" &
         content.xmlEncode).status
-  except ValueError, ProtocolError, TimeoutError, IOError, OSError:
+  except ValueError, ProtocolError, TimeoutError, IOError, OSError, SslError, Exception:
     raise newException(exceptn = RapportError,
         message = getCurrentExceptionMsg())
 
