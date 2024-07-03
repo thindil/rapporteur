@@ -103,11 +103,11 @@ proc sendRapport*(content: RapportContent): string {.raises: [RapportError],
           message = "Can't set the request HTTP header")
   let newHash: Hash = hash(x = content.xmlEncode)
   try:
-    let response = client.request(url = serverAddress, httpMethod = HttpPost,
+    let response: Response = client.request(url = serverAddress, httpMethod = HttpPost,
         body = "key=" & appKey.xmlEncode & "&hash=" & $newHash & "&content=" &
         content.xmlEncode)
-    var line = ""
-    while response.bodyStream.readLine(line):
+    var line: RapportContent = ""
+    while response.bodyStream.readLine(line = line):
       result &= line & '\n'
   except ValueError, ProtocolError, TimeoutError, IOError, OSError, SslError, Exception:
     raise newException(exceptn = RapportError,
