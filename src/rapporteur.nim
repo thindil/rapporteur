@@ -35,7 +35,7 @@
 ##
 ##     sendRapport(content = "My message here")
 
-import std/[cgi, hashes, httpclient, net, uri]
+import std/[cgi, hashes, httpclient, net, streams, uri]
 import contracts
 
 type
@@ -103,9 +103,12 @@ proc sendRapport*(content: RapportContent): string {.raises: [RapportError],
           message = "Can't set the request HTTP header")
   let newHash: Hash = hash(x = content.xmlEncode)
   try:
-    result = client.request(url = serverAddress, httpMethod = HttpPost,
+    let response = client.request(url = serverAddress, httpMethod = HttpPost,
         body = "key=" & appKey.xmlEncode & "&hash=" & $newHash & "&content=" &
-        content.xmlEncode).status
+        content.xmlEncode)
+    var line = ""
+    while response.bodyStream.readLine(line):
+      result &= line & '\n'
   except ValueError, ProtocolError, TimeoutError, IOError, OSError, SslError, Exception:
     raise newException(exceptn = RapportError,
         message = getCurrentExceptionMsg())
