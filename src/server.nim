@@ -30,13 +30,14 @@
 import std/[cgi, envvars, files, hashes, os, parsecfg, paths, strtabs, strutils, streams]
 import contracts
 
-proc main() {.raises: [], tags: [ReadEnvEffect, WriteIOEffect, ReadDirEffect, ReadIOEffect,
-    RootEffect], contractual.} =
+proc main() {.raises: [], tags: [ReadEnvEffect, WriteIOEffect, ReadDirEffect,
+    ReadIOEffect, RootEffect], contractual.} =
   ## The main procedure of the server
 
   type AnswerString = string
 
-  proc answer(message: AnswerString) {.raises: [], tags: [WriteIOEffect], contractual.} =
+  proc answer(message: AnswerString) {.raises: [], tags: [WriteIOEffect],
+      contractual.} =
     ## Print the message into standard output to send it to the client
     ##
     ## * message - the message to print
@@ -44,6 +45,7 @@ proc main() {.raises: [], tags: [ReadEnvEffect, WriteIOEffect, ReadDirEffect, Re
       message.len > 0
     body:
       try:
+        stdout.write(s = "Content-Type: text/plain")
         stdout.write(s = message & "\n")
       except IOError:
         discard
@@ -58,7 +60,8 @@ proc main() {.raises: [], tags: [ReadEnvEffect, WriteIOEffect, ReadDirEffect, Re
   try:
     config.open(input = fileStream, filename = configFile.string)
   except IOError, Exception:
-    answer(message = "Status: 500 Invalid config file")
+    answer(message = "Status: 500 Invalid config file\n" &
+        getCurrentExceptionMsg())
     quit QuitFailure
   var
     keys: seq[string] = @[]
@@ -67,7 +70,8 @@ proc main() {.raises: [], tags: [ReadEnvEffect, WriteIOEffect, ReadDirEffect, Re
     var entry: CfgEvent = try:
         config.next
       except ValueError, OSError, IOError:
-        answer(message = "Status: 500 Invalid config value")
+        answer(message = "Status: 500 Invalid config value\n" &
+            getCurrentExceptionMsg())
         quit QuitFailure
     case entry.kind
     of cfgEof:
@@ -86,30 +90,34 @@ proc main() {.raises: [], tags: [ReadEnvEffect, WriteIOEffect, ReadDirEffect, Re
   try:
     config.close
   except OSError, IOError:
-    answer(message = "Status: 500 Invalid config file")
+    answer(message = "Status: 500 Invalid config file\n" &
+        getCurrentExceptionMsg())
   if keys.len == 0 or dataDir.string.len == 0:
-    answer(message = "Status: 500 Server not configured")
+    answer(message = "Status: 500 Server not configured\n" &
+        getCurrentExceptionMsg())
     quit QuitFailure
 
   # Read the request data
   let request: StringTableRef = try:
       readData(allowedMethods = {methodPost})
     except ValueError, IOError:
-      answer(message = "Status: 400 Invalid data sent")
+      answer(message = "Status: 400 Invalid data sent\n" &
+          getCurrentExceptionMsg())
       quit QuitFailure
     except CgiError:
-      answer(message = "Status: 401 Invalid method sent")
+      answer(message = "Status: 401 Only POST method allowed")
       quit QuitFailure
   for key in ["key", "hash", "content"]:
     if key notin request:
-      answer(message = "Status: 400 No " & key & " sent.")
+      answer(message = "Status: 400 No " & key & " sent")
       quit QuitFailure
   try:
     if request["key"] notin keys:
-      answer(message = "Status: 401 Unauthorized")
+      answer(message = "Status: 401 Invalid application key")
       quit QuitFailure
   except KeyError:
-    answer(message = "Status: 500 Can't check the key")
+    answer(message = "Status: 500 Can't check the key\n" &
+        getCurrentExceptionMsg())
     quit QuitFailure
 
   # Check if the same report exist
@@ -117,7 +125,7 @@ proc main() {.raises: [], tags: [ReadEnvEffect, WriteIOEffect, ReadDirEffect, Re
     newHash: Hash = try:
         hash(x = request["key"] & request["hash"])
       except KeyError:
-        answer(message = "Status: 500 Invalid key")
+        answer(message = "Status: 500 Invalid key\n" & getCurrentExceptionMsg())
         quit QuitFailure
     reportFile: Path = (dataDir.string & DirSep & $newHash & ".txt").Path
   if fileExists(filename = reportFile):
@@ -128,13 +136,14 @@ proc main() {.raises: [], tags: [ReadEnvEffect, WriteIOEffect, ReadDirEffect, Re
   let report: File = try:
       reportFile.string.open(mode = fmWrite)
     except IOError:
-      answer(message = "Status: 500 Can't create report")
+      answer(message = "Status: 500 Can't create report\n" &
+          getCurrentExceptionMsg())
       quit QuitFailure
   try:
     report.writeLine(x = "KEY: " & request["key"])
     report.writeLine(x = request["content"])
   except KeyError, IOError:
-    answer(message = "Status: 500 Invalid key")
+    answer(message = "Status: 500 Invalid key\n" & getCurrentExceptionMsg())
     quit QuitFailure
   finally:
     report.close
