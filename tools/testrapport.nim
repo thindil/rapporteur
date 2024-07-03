@@ -23,8 +23,19 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+# It is a very simple example how the bug reporting can be used. It require
+# working somewhere the project's server. For more information about setting
+# the server, please look at the project's documenation.
+
 import std/uri
 import ../src/rapporteur
 
+# Initialize the library, set the server's HTTP address and the authentication
+# key for it. Perhaps the best option for setting the key, would be read it
+# from outside source, like environment variable or other file during
+# compilation. If you set the key to DEADBEEF value, sending reports will be
+# disabled.
 initRapport(httpAddress = "https://www.laeran.pl.eu.org/rap".parseUri, key = "aber2")
+# Send a report to the server, via HTTP POST method. Content is the text which
+# will be encoded and send to the server.
 echo sendRapport(content = "hello")
