@@ -73,7 +73,7 @@ proc initRapport*(httpAddress: Uri; key: RapportKey) {.raises: [RapportError],
     serverAddress = httpAddress
     appKey = key
 
-proc sendRapport*(content: RapportContent): tuple[status: Positive;
+proc sendRapport*(content: RapportContent): tuple[status: Natural;
     body: RapportContent] {.raises: [RapportError], tags: [ReadIOEffect, WriteIOEffect,
     TimeEffect, RootEffect], contractual.} =
   ## Send a report to the project's server.
