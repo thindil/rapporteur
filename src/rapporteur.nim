@@ -93,17 +93,21 @@ proc sendRapport*(content: RapportContent): tuple[status: Natural;
   # If key is set to DEADBEEF, don't send anything
   if appKey == "DEADBEEF":
     return
+  # Start a new HTTP client
   let client: HttpClient = try:
       newHttpClient()
     except SslError, LibraryError, Exception:
       raise newException(exceptn = RapportError,
           message = getCurrentExceptionMsg())
+  # Set a HTTP header with content type info
   client.headers = try:
       newHttpHeaders(keyValuePairs = {"Content-Type": "application/x-www-form-urlencoded"})
     except KeyError:
       raise newException(exceptn = RapportError,
           message = "Can't set the request HTTP header")
+  # Set the encoded message's hash
   let newHash: Hash = hash(x = content.xmlEncode)
+  # Send a request to the server and get its response
   try:
     let response: Response = client.request(url = serverAddress,
         httpMethod = HttpPost, body = "key=" & appKey.xmlEncode & "&hash=" &
@@ -111,6 +115,7 @@ proc sendRapport*(content: RapportContent): tuple[status: Natural;
         content.xmlEncode)
     var line: RapportContent = ""
     result.body = ""
+    # Get the server's response body
     while response.bodyStream.readLine(line = line):
       if line.startsWith(prefix = "Status"):
         result.status = line.split(sep = ' ')[1].parseInt
