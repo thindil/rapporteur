@@ -35,7 +35,7 @@ import ../src/rapporteur
 # from outside source, like environment variable or other file during
 # compilation. If you set the key to DEADBEEF value, sending reports will be
 # disabled.
-initRapport(httpAddress = "https://www.laeran.pl.eu.org/rap".parseUri, key = "aber2")
+initRapport(httpAddress = "https://www.laeran.pl.eu.org/rap".parseUri, key = "aber")
 # Send a report to the server, via HTTP POST method. Content is the text which
 # will be encoded and send to the server.
 echo sendRapport(content = "hello")
