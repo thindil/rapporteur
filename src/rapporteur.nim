@@ -35,7 +35,7 @@
 ##
 ##     sendRapport(content = "My message here")
 
-import std/[cgi, hashes, httpclient, net, streams, uri]
+import std/[cgi, hashes, httpclient, net, streams, strutils, uri]
 import contracts
 
 type
@@ -73,13 +73,15 @@ proc initRapport*(httpAddress: Uri; key: RapportKey) {.raises: [RapportError],
     serverAddress = httpAddress
     appKey = key
 
-proc sendRapport*(content: RapportContent): string {.raises: [RapportError],
-    tags: [ReadIOEffect, WriteIOEffect, TimeEffect, RootEffect], contractual.} =
+proc sendRapport*(content: RapportContent): tuple[status: Positive;
+    body: RapportContent] {.raises: [RapportError], tags: [ReadIOEffect, WriteIOEffect,
+    TimeEffect, RootEffect], contractual.} =
   ## Send a report to the project's server.
   ##
   ## * content - the content of the report
   ##
-  ## Returns the response from the server
+  ## Returns the tuple with the HTTP status code and the body of the servers'
+  ## response.
   # Check do rapporteur was initialized
   if ($serverAddress).len == 0 or appKey.len == 0:
     raise newException(exceptn = RapportError,
@@ -103,12 +105,16 @@ proc sendRapport*(content: RapportContent): string {.raises: [RapportError],
           message = "Can't set the request HTTP header")
   let newHash: Hash = hash(x = content.xmlEncode)
   try:
-    let response: Response = client.request(url = serverAddress, httpMethod = HttpPost,
-        body = "key=" & appKey.xmlEncode & "&hash=" & $newHash & "&content=" &
+    let response: Response = client.request(url = serverAddress,
+        httpMethod = HttpPost, body = "key=" & appKey.xmlEncode & "&hash=" &
+        $newHash & "&content=" &
         content.xmlEncode)
     var line: RapportContent = ""
+    result.body = ""
     while response.bodyStream.readLine(line = line):
-      result &= line & '\n'
+      if line.startsWith(prefix = "Status"):
+        result.status = line.split(sep = ' ')[1].parseInt
+      result.body &= line & '\n'
   except ValueError, ProtocolError, TimeoutError, IOError, OSError, SslError, Exception:
     raise newException(exceptn = RapportError,
         message = getCurrentExceptionMsg())
