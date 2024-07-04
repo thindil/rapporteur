@@ -35,7 +35,8 @@ import ../src/rapporteur
 # from outside source, like environment variable or other file during
 # compilation. If you set the key to DEADBEEF value, sending reports will be
 # disabled.
-initRapport(httpAddress = "https://www.laeran.pl.eu.org/rap".parseUri, key = "aber")
+initRapport(httpAddress = "https://www.laeran.pl.eu.org/rap".parseUri, key = "DEADBEEF")
 # Send a report to the server, via HTTP POST method. Content is the text which
-# will be encoded and send to the server.
+# will be encoded and send to the server. As the result, show the tuple which
+# contains the server HTTP response status and the full answer of the server.
 echo sendRapport(content = "hello")
