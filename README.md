@@ -93,7 +93,14 @@ The second step is to send a report from your code. It is done with two steps:
    The server returns status code *201* when the report was created, *208* when
    the same report exists on the server, *400* when an invalid data was sent,
    *401* when the application key is invalid (the application isn't authorized
-   to send reports) and *500* when something wrong was on the server side.
+   to send reports) and *500* when something wrong was on the server side. In
+   that situation, the respose body contains more technical information about
+   what was wrong.
+
+#### Note
+If you want to sent reports to the server via HTTPS, which means usually, you
+have to compile your code with parameter "-d:ssl". For example:
+`nim c -d:ssl myapp.nim`
 
 ### License
 
