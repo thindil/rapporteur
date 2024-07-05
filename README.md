@@ -1,8 +1,8 @@
 ### General information
 
 Rapporteur is a suite to automatically send bug reports from a program to the
-server. At this moment, the whole project is in alpha stage. It offer very
-basic functionality and may contains bugs. Use at your own risk. If you read
+server. At this moment, the whole project is in alpha stage. It offers very
+basic functionality and may contain bugs. Use at your own risk. If you read
 this file on GitHub: **please don't send pull requests here**. All will be
 automatically closed. Any code propositions should go to the
 [Fossil](https://www.laeran.pl.eu.org/repositories/rapporteur) repository.
@@ -40,7 +40,7 @@ may vary and depends on the operating system of the server.
 1. Compile the CGI script with one of commands mentioned above.
 2. Place the CGI script somewhere on the server, and give the server permissions
    to run the script.
-3. Create a configuration file for the CGI script. It should contains two options:
+3. Create a configuration file for the CGI script. It should contain two options:
 
    `keys = "key1;key2;key3"` - the list of keys for applications which are allowed
     to send reports. Separated by semicolon. Generally, very basic authentication.
@@ -64,7 +64,7 @@ And the server should be set up. :)
 The second step is to send a report from your code. It is done with two steps:
 
 1. Initialize the `rapporteur` module somewhere in your code, but before the
-   first message which will be send to the server. Initialization is made by
+   first message which will be sent to the server. Initialization is made by
    calling procedure `initRapport` to set the HTTP address of the project's
    server and the key of the application used to authenticate the send request.
    For example:
@@ -101,7 +101,7 @@ You can find an example how to send a report in *tools* directory, the file
 *testrapport.nim*
 
 #### Note
-If you want to sent reports to the server via HTTPS, which means usually, you
+If you want to send reports to the server via HTTPS, which means usually, you
 have to compile your code with parameter "-d:ssl". For example:
 `nim c -d:ssl myapp.nim`
 
