@@ -94,8 +94,11 @@ The second step is to send a report from your code. It is done with two steps:
    the same report exists on the server, *400* when an invalid data was sent,
    *401* when the application key is invalid (the application isn't authorized
    to send reports) and *500* when something wrong was on the server side. In
-   that situation, the respose body contains more technical information about
+   that situation, the response body contains more technical information about
    what was wrong.
+
+You can find an example how to send a report in *tools* directory, the file
+*testrapport.nim*
 
 #### Note
 If you want to sent reports to the server via HTTPS, which means usually, you
