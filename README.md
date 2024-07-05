@@ -47,8 +47,10 @@ may vary and depends on the operating system of the server.
    `datadir = "/path/to/dir/with/reports"` - the full path to the directory where
     the reports will be stored. The web server must have permissions to write to
     that directory.
-4. Create a simple CGI script which will run the project's server. It must contain
-   the environment variable `RAPPORT_CONFIG` with full path to the project's
+4. Create a simple CGI script which will run the project's server. The script must
+   be in the path where the server expect CGI script. Usually it is directory *cgi-bin*
+   etc. It depends on the server configuration. The script must contain the
+   environment variable `RAPPORT_CONFIG` with full path to the project's
    configuration file, created in the step 3. For example, for Linux the shell
    script could look that:
 
@@ -59,6 +61,21 @@ may vary and depends on the operating system of the server.
 And the server should be set up. :)
 
 #### Sending a report to the server
+The second step is to send a report from your code. It is done with two steps:
+
+1. Initialize the `rapporteur` module somewhere in your code, but before the
+   first message which will be send to the server. Initialization is made by
+   calling procedure `initRapport` to set the HTTP address of the project's
+   server and the key of the application used to authenticate the send request.
+   For example:
+
+       import rapporteur
+
+       initRapport(httpAddress = "https://www.myserver.com/rapporteur".parseUri, key = "myKey")
+
+   It is a good idea to not store the key value in the code, but read it, for
+   example, from an environment variable during compilation. The key is the
+   simple authentication method for requests, to prevent spam, etc.
 
 ### License
 
