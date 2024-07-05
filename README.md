@@ -75,7 +75,25 @@ The second step is to send a report from your code. It is done with two steps:
 
    It is a good idea to not store the key value in the code, but read it, for
    example, from an environment variable during compilation. The key is the
-   simple authentication method for requests, to prevent spam, etc.
+   simple authentication method for requests, to prevent spam, etc. Setting
+   the key value to **DEADBEEF** will disable sending reports to the server.
+
+2. Send a report by calling procedure `sendRapport` with content of the report
+   to send. The procedure returns a tuple with response from the server: the
+   response's status code and the response's content. For example:
+
+       import rapporteur
+
+       let response = sendRapport(content = "hello")
+       if response.status in {201, 208}:
+         echo "OK"
+       else:
+         echo response.body
+
+   The server returns status code *201* when the report was created, *208* when
+   the same report exists on the server, *400* when an invalid data was sent,
+   *401* when the application key is invalid (the application isn't authorized
+   to send reports) and *500* when something wrong was on the server side.
 
 ### License
 
