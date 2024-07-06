@@ -45,7 +45,7 @@ proc main() {.raises: [], tags: [ReadEnvEffect, WriteIOEffect, ReadDirEffect,
       message.len > 0
     body:
       try:
-        stdout.write(s = "Content-Type: text/plain")
+        stdout.write(s = "Content-Type: text/plain\n")
         stdout.write(s = message & "\n")
       except IOError:
         discard
