@@ -45,4 +45,7 @@ initRapport(httpAddress = "https://www.laeran.pl.eu.org/rap".parseUri, key = app
 # Send a report to the server, via HTTP POST method. Content is the text which
 # will be encoded and send to the server. As the result, show the tuple which
 # contains the server HTTP response status and the full answer of the server.
-echo sendRapport(content = "hello")
+let response: tuple[status: Natural, body: RapportContent] = sendRapport(
+    content = "hello")
+echo "Status code:\n", response.status
+echo "Response body:\n", response.body
