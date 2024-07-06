@@ -36,12 +36,14 @@ import ../src/rapporteur
 # during compilation. If not set via compilation option, it default value is
 # DEADBEEF.
 const appKey {.strdefine.}: string = "DEADBEEF"
+
 # Initialize the library, set the server's HTTP address and the authentication
 # key for it. Perhaps the best option for setting the key, is to read it
 # from outside source, like environment variable or as an option during
 # compilation. If you set the key to DEADBEEF value, sending reports will be
 # disabled.
 initRapport(httpAddress = "https://www.laeran.pl.eu.org/rap".parseUri, key = appKey)
+
 # Send a report to the server, via HTTP POST method. Content is the text which
 # will be encoded and send to the server. As the result, show the tuple which
 # contains the server HTTP response status and the full answer of the server.
