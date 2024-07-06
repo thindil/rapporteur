@@ -25,15 +25,20 @@
 
 # It is a very simple example how the bug reporting can be used. It require
 # working somewhere the project's server. For more information about setting
-# the server, please look at the project's documenation.
+# the server, please look at the project's documenation. To send the report,
+# you have to define appKey option during compilation. For example:
+# nim c -d:ssl -d:appKey=mykey testrapport.nim
 
 import std/uri
 import ../src/rapporteur
 
+# The application key used for authentication on the server. Here it is read
+# during compilation. If not set via compilation option, it default value is
+# DEADBEEF.
 const appKey {.strdefine.}: string = "DEADBEEF"
 # Initialize the library, set the server's HTTP address and the authentication
-# key for it. Perhaps the best option for setting the key, would be read it
-# from outside source, like environment variable or other file during
+# key for it. Perhaps the best option for setting the key, is to read it
+# from outside source, like environment variable or as an option during
 # compilation. If you set the key to DEADBEEF value, sending reports will be
 # disabled.
 initRapport(httpAddress = "https://www.laeran.pl.eu.org/rap".parseUri, key = appKey)
