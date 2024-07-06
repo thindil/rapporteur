@@ -37,7 +37,7 @@ permissions on the server to some directory. Additionally, you will need to crea
 a shell script and configuration file for the CGI script. Detailed instructions
 may vary and depends on the operating system of the server.
 
-1. Compile the CGI script with one of commands mentioned above.
+1. Compile the CGI script with one of the commands mentioned above.
 2. Place the CGI script somewhere on the server, and give the server permissions
    to run the script.
 3. Create a configuration file for the CGI script. It should contain two options:
@@ -54,9 +54,9 @@ may vary and depends on the operating system of the server.
    configuration file, created in the step 3. For example, for Linux the shell
    script could look that:
 
-      #!/usr/bin/sh
-      export RAPPORT_CONFIG=/path/to/config.cfg
-      /path/to/bin/rapporteur
+        #!/usr/bin/sh
+        export RAPPORT_CONFIG=/path/to/config.cfg
+        /path/to/bin/rapporteur
 
 And the server should be set up. :)
 
@@ -69,9 +69,9 @@ The second step is to send a report from your code. It is done with two steps:
    server and the key of the application used to authenticate the send request.
    For example:
 
-       import rapporteur
+        import rapporteur
 
-       initRapport(httpAddress = "https://www.myserver.com/rapporteur".parseUri, key = "myKey")
+        initRapport(httpAddress = "https://www.myserver.com/rapporteur".parseUri, key = "myKey")
 
    It is a good idea to not store the key value in the code, but read it, for
    example, from an environment variable during compilation. The key is the
@@ -82,13 +82,13 @@ The second step is to send a report from your code. It is done with two steps:
    to send. The procedure returns a tuple with response from the server: the
    response's status code and the response's content. For example:
 
-       import rapporteur
+        import rapporteur
 
-       let response = sendRapport(content = "hello")
-       if response.status in {201, 208}:
-         echo "OK"
-       else:
-         echo response.body
+        let response = sendRapport(content = "hello")
+        if response.status in {201, 208}:
+          echo "OK"
+        else:
+          echo response.body
 
    The server returns status code *201* when the report was created, *208* when
    the same report exists on the server, *400* when an invalid data was sent,
