@@ -1,8 +1,8 @@
 ### General information
 
 Rapporteur is a suite to automatically send bug reports from a program to the
-server. At this moment, the whole project is in alpha stage. It offers very
-basic functionality and may contain bugs. Use at your own risk. If you read
+server. **At this moment, the whole project is in alpha stage. It offers very
+basic functionality and may contain bugs. Use at your own risk.** If you read
 this file on GitHub: **please don't send pull requests here**. All will be
 automatically closed. Any code propositions should go to the
 [Fossil](https://www.laeran.pl.eu.org/repositories/rapporteur) repository.
@@ -40,7 +40,7 @@ may vary and depends on the operating system of the server.
 1. Compile the CGI script with one of the commands mentioned above.
 2. Place the CGI script somewhere on the server, and give the server permissions
    to run the script.
-3. Create a configuration file for the CGI script. It should contain two options:
+3. Create a configuration file for the CGI script. It must contain two options:
 
    `keys = "key1;key2;key3"` - the list of keys for applications which are allowed
     to send reports. Separated by semicolon. Generally, very basic authentication.
